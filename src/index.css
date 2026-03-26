@@ -24,12 +24,7 @@ body {
   scrollbar-width: none;
 }
 
-/* Leaflet map container must have explicit height */
-.leaflet-container {
-  height: 100%;
-  width: 100%;
-}
-
+/* Removed leaflet container styles as we now use Google Maps */
 /* Custom scrollbar for desktop sidebars */
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;
@@ -47,21 +42,4 @@ body {
   scroll-behavior: smooth;
 }
 
-/* Subtler Leaflet popup overrides for dark theme */
-.leaflet-popup-content-wrapper {
-  background: rgba(15, 23, 42, 0.95) !important; /* slate-900 with transparency */
-  backdrop-filter: blur(8px) !important;
-  color: #f8fafc !important;
-  border-radius: 1rem !important;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5) !important;
-  border: 1px solid rgba(255,255,255,0.1) !important;
-}
-.leaflet-popup-tip {
-  background: rgba(15, 23, 42, 0.95) !important;
-}
-.leaflet-popup-close-button {
-  color: #94a3b8 !important;
-  font-size: 1.25rem !important;
-  top: 4px !important;
-  right: 4px !important;
-}
+/* Removed Leaflet popup overrides */

@@ -1,31 +1,25 @@
-import { useState } from 'react'
-import { MapContainer, TileLayer, Polyline, Marker, useMapEvents } from 'react-leaflet'
-import L from 'leaflet'
+import { useState, useMemo } from 'react'
+import { GoogleMap, Polyline, OverlayView } from '@react-google-maps/api'
 import { supabase } from '../lib/supabase'
 
-// Custom marker for drawing path (small dot)
-const pathIcon = L.divIcon({
-  className: 'custom-div-icon',
-  html: `<div class="w-3 h-3 bg-white rounded-full border-2 border-slate-900 shadow-md"></div>`,
-  iconSize: [12, 12],
-  iconAnchor: [6, 6]
-})
+const KATHMANDU_CENTER = { lat: 27.7172, lng: 85.3240 }
 
-// Custom marker for Stops (larger circle)
-const createStopIcon = (color, index) => L.divIcon({
-  className: 'custom-stop-icon',
-  html: `<div class="w-6 h-6 rounded-full border-2 border-white shadow-lg flex items-center justify-center text-[10px] font-bold text-white relative z-10" style="background-color: ${color}">${index}</div>`,
-  iconSize: [24, 24],
-  iconAnchor: [12, 12]
-})
+const CARTO_DARK_MATTER_STYLE = []
 
-function MapClickHandler({ onMapClick }) {
-  useMapEvents({
-    click(e) {
-      onMapClick([e.latlng.lat, e.latlng.lng])
-    }
-  })
-  return null
+function CustomHTMLMarker({ lat, lng, children }) {
+  const position = useMemo(() => ({ lat, lng }), [lat, lng])
+  return (
+    <OverlayView
+      position={position}
+      mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+      getPixelPositionOffset={(width, height) => ({
+        x: -(width / 2),
+        y: -(height / 2),
+      })}
+    >
+      {children}
+    </OverlayView>
+  )
 }
 
 export default function ContributionMap({ routeData, onCancel, prefillData }) {
@@ -42,10 +36,10 @@ export default function ContributionMap({ routeData, onCancel, prefillData }) {
   const [submitError, setSubmitError] = useState('')
   const [submitSuccess, setSubmitSuccess] = useState(false)
 
-  const handleMapClick = (latlng) => {
+  const handleMapClick = (e) => {
     // Only allow drawing if not currently adding a stop
-    if(!isAddingStop && !isSubmitting && !submitSuccess) {
-      setDraftCoordinates(prev => [...prev, latlng])
+    if(!isAddingStop && !isSubmitting && !submitSuccess && e.latLng) {
+      setDraftCoordinates(prev => [...prev, [e.latLng.lat(), e.latLng.lng()]])
     }
   }
 
@@ -153,45 +147,54 @@ export default function ContributionMap({ routeData, onCancel, prefillData }) {
     )
   }
 
+  const googlePath = useMemo(() => draftCoordinates.map(c => ({ lat: c[0], lng: c[1] })), [draftCoordinates])
+
   return (
     <div className="absolute inset-0 flex flex-col md:flex-row bg-slate-950 overflow-hidden">
       
       {/* Map Area - Full Screen Base */}
-      <div className="absolute inset-0 z-0">
-        <MapContainer 
-          center={[27.7172, 85.3240]} // Kathmandu
-          zoom={13} 
-          className="w-full h-full bg-slate-900"
-          zoomControl={false}
+      <div className="absolute inset-0 z-0 bg-slate-900">
+        <GoogleMap
+          mapContainerStyle={{ width: '100%', height: '100%' }}
+          center={KATHMANDU_CENTER}
+          zoom={13}
+          onClick={handleMapClick}
+          options={{
+            styles: CARTO_DARK_MATTER_STYLE,
+            disableDefaultUI: true,
+            zoomControl: true,
+            draggableCursor: 'crosshair'
+          }}
         >
-          <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-            maxZoom={19}
-          />
-          <MapClickHandler onMapClick={handleMapClick} />
-
           {/* Draw the drafted line */}
-          {draftCoordinates.length > 0 && (
+          {googlePath.length > 0 && (
             <Polyline 
-              positions={draftCoordinates} 
-              color={routeData.color} 
-              weight={5} 
-              opacity={0.8}
+              path={googlePath}
+              options={{
+                strokeColor: routeData.color,
+                strokeWeight: 5,
+                strokeOpacity: 0.8,
+                clickable: false
+              }}
             />
           )}
 
           {/* Draw dots at clicked vertices */}
           {draftCoordinates.map((coord, idx) => (
-            <Marker key={idx} position={coord} icon={pathIcon} />
+            <CustomHTMLMarker key={`dot-${idx}`} lat={coord[0]} lng={coord[1]}>
+              <div className="w-3 h-3 bg-white rounded-full border-2 border-slate-900 shadow-md pointer-events-none" />
+            </CustomHTMLMarker>
           ))}
 
           {/* Draw numbered Stop markers */}
           {stops.map((stop, idx) => (
-            <Marker key={idx} position={[stop.lat, stop.lng]} icon={createStopIcon(routeData.color, idx + 1)} />
+            <CustomHTMLMarker key={`stop-${idx}`} lat={stop.lat} lng={stop.lng}>
+              <div className="w-6 h-6 rounded-full border-2 border-white shadow-lg flex items-center justify-center text-[10px] font-bold text-white pointer-events-none" style={{ backgroundColor: routeData.color }}>
+                {idx + 1}
+              </div>
+            </CustomHTMLMarker>
           ))}
-
-        </MapContainer>
+        </GoogleMap>
       </div>
 
       {/* Floating Tools Panel */}

@@ -1,38 +1,25 @@
-import { useState, useEffect } from 'react'
-import { MapContainer, TileLayer, Polyline, Marker, useMap } from 'react-leaflet'
-import L from 'leaflet'
+import { useState, useEffect, useMemo, useCallback } from 'react'
+import { GoogleMap, Polyline, Marker, OverlayView } from '@react-google-maps/api'
 import { supabase } from '../lib/supabase'
 
-const pathIcon = L.divIcon({
-  className: 'custom-div-icon',
-  html: `<div class="w-3 h-3 bg-white rounded-full border-2 border-slate-900 shadow-md"></div>`,
-  iconSize: [12, 12],
-  iconAnchor: [6, 6]
-})
+const KATHMANDU_CENTER = { lat: 27.7172, lng: 85.3240 }
 
-const editingPathIcon = L.divIcon({
-  className: 'custom-div-icon',
-  html: `<div class="w-4 h-4 bg-amber-400 rounded-full border-2 border-white shadow-lg animate-pulse cursor-pointer"></div>`,
-  iconSize: [16, 16],
-  iconAnchor: [8, 8]
-})
+const CARTO_DARK_MATTER_STYLE = []
 
-const createStopIcon = (color, index) => L.divIcon({
-  className: 'custom-stop-icon',
-  html: `<div class="w-6 h-6 rounded-full border-2 border-white shadow-lg flex items-center justify-center text-[10px] font-bold text-white relative z-10" style="background-color: ${color}">${index}</div>`,
-  iconSize: [24, 24],
-  iconAnchor: [12, 12]
-})
-
-function MapBoundsFitter({ coordinates }) {
-  const map = useMap()
-  useEffect(() => {
-    if (coordinates && coordinates.length > 0) {
-      const bounds = L.latLngBounds(coordinates)
-      map.fitBounds(bounds, { padding: [50, 50] })
-    }
-  }, [map, coordinates])
-  return null
+function CustomHTMLMarker({ lat, lng, children }) {
+  const position = useMemo(() => ({ lat, lng }), [lat, lng])
+  return (
+    <OverlayView
+      position={position}
+      mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+      getPixelPositionOffset={(width, height) => ({
+        x: -(width / 2),
+        y: -(height / 2),
+      })}
+    >
+      {children}
+    </OverlayView>
+  )
 }
 
 export default function AdminReviewMap({ route, onActionComplete, readOnly = false }) {
@@ -43,6 +30,11 @@ export default function AdminReviewMap({ route, onActionComplete, readOnly = fal
   
   // Local state for dragging nodes
   const [editablePath, setEditablePath] = useState([])
+  const [map, setMap] = useState(null)
+
+  const onLoad = useCallback(function callback(mapInstance) {
+    setMap(mapInstance)
+  }, [])
 
   useEffect(() => {
     if (!route) return
@@ -70,6 +62,15 @@ export default function AdminReviewMap({ route, onActionComplete, readOnly = fal
     fetchStops()
   }, [route])
 
+  // Fit bounds when path loads
+  useEffect(() => {
+    if (map && editablePath && editablePath.length > 0 && window.google) {
+      const bounds = new window.google.maps.LatLngBounds()
+      editablePath.forEach(coord => bounds.extend(new window.google.maps.LatLng(coord[0], coord[1])))
+      map.fitBounds(bounds, { top: 50, bottom: 50, left: 50, right: 50 })
+    }
+  }, [map, editablePath])
+
   const handleUpdateStatus = async (newStatus) => {
     setIsUpdating(true)
     try {
@@ -92,12 +93,15 @@ export default function AdminReviewMap({ route, onActionComplete, readOnly = fal
   }
 
   const handleDragNode = (idx, latLng) => {
+    if (!latLng) return
     setEditablePath(prev => {
       const newPath = [...prev]
-      newPath[idx] = [latLng.lat, latLng.lng]
+      newPath[idx] = [latLng.lat(), latLng.lng()]
       return newPath
     })
   }
+
+  const googlePath = useMemo(() => editablePath.map(c => ({ lat: c[0], lng: c[1] })), [editablePath])
 
   if (!route) return null
 
@@ -106,48 +110,61 @@ export default function AdminReviewMap({ route, onActionComplete, readOnly = fal
       
       {/* Map Area */}
       <div className="flex-1 relative z-0">
-        <MapContainer 
-          center={[27.7172, 85.3240]} 
-          zoom={13} 
-          className="w-full h-full bg-slate-900"
-          zoomControl={false}
+        <GoogleMap
+          mapContainerStyle={{ width: '100%', height: '100%' }}
+          center={KATHMANDU_CENTER}
+          zoom={13}
+          onLoad={onLoad}
+          options={{
+            styles: CARTO_DARK_MATTER_STYLE,
+            disableDefaultUI: true,
+            zoomControl: true,
+          }}
         >
-          <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-            maxZoom={19}
-          />
-
-          {editablePath && editablePath.length > 0 && (
+          {googlePath && googlePath.length > 0 && (
             <>
-              <MapBoundsFitter coordinates={editablePath} />
+              {/* Path Polyline */}
+              {/* Note: Google Maps Polylines do not natively support dashArray styling easily, so we just use opacity for edit mode */}
               <Polyline 
-                positions={editablePath} 
-                color={route.color} 
-                weight={5} 
-                opacity={isEditMode ? 0.4 : 0.8}
-                dashArray={isEditMode ? '10, 10' : undefined}
+                path={googlePath}
+                options={{
+                  strokeColor: route.color,
+                  strokeWeight: 5,
+                  strokeOpacity: isEditMode ? 0.4 : 0.8,
+                  clickable: false
+                }}
               />
               
               {/* Vertex dots (Draggable if Edit Mode) */}
-              {editablePath.map((coord, idx) => (
-                <Marker 
-                  key={`path-${idx}`} 
-                  position={coord} 
-                  icon={isEditMode ? editingPathIcon : pathIcon}
-                  draggable={isEditMode}
-                  eventHandlers={{
-                    drag: (e) => handleDragNode(idx, e.target.getLatLng())
-                  }}
-                />
-              ))}
+              {editablePath.map((coord, idx) => {
+                if (isEditMode) {
+                  return (
+                    <Marker 
+                      key={`path-edit-${idx}`} 
+                      position={{ lat: coord[0], lng: coord[1] }}
+                      draggable={true}
+                      onDragEnd={(e) => handleDragNode(idx, e.latLng)}
+                    />
+                  )
+                }
+
+                return (
+                  <CustomHTMLMarker key={`path-${idx}`} lat={coord[0]} lng={coord[1]}>
+                    <div className="w-3 h-3 bg-white rounded-full border-2 border-slate-900 shadow-md pointer-events-none" />
+                  </CustomHTMLMarker>
+                )
+              })}
             </>
           )}
 
           {stops.map((stop, idx) => (
-            <Marker key={stop.id} position={[stop.lat, stop.lng]} icon={createStopIcon(route.color, idx + 1)} />
+            <CustomHTMLMarker key={`stop-${stop.id}`} lat={stop.lat} lng={stop.lng}>
+              <div className="w-6 h-6 rounded-full border-2 border-white shadow-lg flex items-center justify-center text-[10px] font-bold text-white pointer-events-none" style={{ backgroundColor: route.color }}>
+                {idx + 1}
+              </div>
+            </CustomHTMLMarker>
           ))}
-        </MapContainer>
+        </GoogleMap>
 
         {/* Floating Route Info Header w/ Actions */}
         <div className="absolute top-4 left-4 z-[1000] bg-slate-900/90 backdrop-blur border border-slate-700 p-5 rounded-2xl shadow-2xl max-w-sm w-full">
@@ -173,7 +190,7 @@ export default function AdminReviewMap({ route, onActionComplete, readOnly = fal
             <div className="mb-4 bg-amber-500/10 border border-amber-500/20 px-3 py-2 rounded-lg flex items-start gap-2">
               <span className="text-amber-500 text-lg leading-none mt-0.5">✋</span>
               <p className="text-[10px] text-amber-400 font-medium leading-tight">
-                **Edit Mode Active:** Drag the blinking yellow nodes on the map to realign this route perfectly to the major roads before saving.
+                **Edit Mode Active:** Drag the red markers on the map to realign this route perfectly to the major roads before saving.
               </p>
             </div>
           )}
@@ -211,7 +228,7 @@ export default function AdminReviewMap({ route, onActionComplete, readOnly = fal
       </div>
 
       {/* Stops Timeline Gallery */}
-      <div className="h-48 bg-slate-950 border-t border-slate-800 p-4 shrink-0 overflow-y-auto custom-scrollbar relative z-10">
+      <div className="h-48 bg-slate-950 border-t border-slate-800 p-4 shrink-0 overflow-y-auto custom-scrollbar relative z-[1000]">
         <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Route Timeline</h3>
         
         {isLoadingStops ? (
@@ -221,7 +238,7 @@ export default function AdminReviewMap({ route, onActionComplete, readOnly = fal
         ) : (
           <div className="flex gap-4 min-w-max pb-2">
             {stops.map((stop, idx) => (
-              <div key={stop.id} className="bg-slate-900 border border-slate-800 p-3 rounded-xl w-48 shrink-0 flex items-center gap-3">
+              <div key={stop.id} className="bg-slate-900 border border-slate-800 p-3 rounded-xl w-48 shrink-0 flex items-center gap-3 relative z-[1010]">
                 <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-lg shrink-0" style={{ backgroundColor: route.color }}>
                   {idx + 1}
                 </div>
