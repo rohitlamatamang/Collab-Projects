@@ -1,3 +1,6 @@
+import { X, Banknote } from 'lucide-react'
+import { Button } from './ui/button'
+
 function RouteDetails({ route, onClose, navMatch }) {
   return (
     <div className="border-t border-white/10 bg-gradient-to-t from-slate-900 via-slate-900/95 to-slate-900/80 backdrop-blur-3xl shrink-0 transition-all duration-300">
@@ -6,7 +9,10 @@ function RouteDetails({ route, onClose, navMatch }) {
         {navMatch && (
           <div className="mb-4 bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 border border-emerald-500/20 rounded-2xl p-4 shadow-inner shadow-emerald-500/10">
             <div className="flex justify-between items-center mb-1.5">
-              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Navigation Fare</span>
+              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest flex items-center gap-1.5">
+                <Banknote className="w-3 h-3" />
+                Navigation Fare
+              </span>
               <span className="text-xl font-black text-white drop-shadow-md">Rs {navMatch.fare}</span>
             </div>
             <p className="text-xs text-slate-300 leading-tight">
@@ -27,14 +33,14 @@ function RouteDetails({ route, onClose, navMatch }) {
             />
             <h3 className="font-bold text-white text-base truncate max-w-[200px] md:max-w-[250px] leading-tight">{route.name}</h3>
           </div>
-          <button
+          <Button
             onClick={onClose}
-            className="text-slate-400 hover:text-white transition-all p-1.5 rounded-full hover:bg-white/10 active:scale-90 bg-slate-800/50"
+            variant="ghost"
+            size="icon"
+            className="text-slate-400 hover:text-white p-1.5 rounded-full hover:bg-white/10 bg-slate-800/50"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+            <X className="w-5 h-5" />
+          </Button>
         </div>
 
         {/* Stops timeline */}

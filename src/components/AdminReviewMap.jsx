@@ -1,6 +1,11 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { GoogleMap, Polyline, Marker, OverlayView } from '@react-google-maps/api'
 import { supabase } from '../lib/supabase'
+import { Hand, Lock, CheckCircle2, XCircle, MapPin, Route, Save, Trash2 } from 'lucide-react'
+import { Button } from './ui/button'
+import { Card } from './ui/card'
+import { Alert, AlertDescription } from './ui/alert'
+import { Badge } from './ui/badge'
 
 const KATHMANDU_CENTER = { lat: 27.7172, lng: 85.3240 }
 
@@ -22,11 +27,11 @@ function CustomHTMLMarker({ lat, lng, children }) {
   )
 }
 
-export default function AdminReviewMap({ route, onActionComplete, readOnly = false }) {
+export default function AdminReviewMap({ route, onActionComplete, readOnly = false, isLiveEdit = false }) {
   const [stops, setStops] = useState([])
   const [isLoadingStops, setIsLoadingStops] = useState(true)
   const [isUpdating, setIsUpdating] = useState(false)
-  const [isEditMode, setIsEditMode] = useState(false)
+  const [isEditMode, setIsEditMode] = useState(isLiveEdit) // Auto-enable edit mode for live edits
   
   // Local state for dragging nodes
   const [editablePath, setEditablePath] = useState([])
@@ -38,12 +43,12 @@ export default function AdminReviewMap({ route, onActionComplete, readOnly = fal
 
   useEffect(() => {
     if (!route) return
-    
-    const parsedPath = typeof route.path_coordinates === 'string' 
-      ? JSON.parse(route.path_coordinates) 
+
+    const parsedPath = typeof route.path_coordinates === 'string'
+      ? JSON.parse(route.path_coordinates)
       : route.path_coordinates
     setEditablePath(parsedPath || [])
-    setIsEditMode(false)
+    setIsEditMode(isLiveEdit) // Reset edit mode based on isLiveEdit prop
 
     const fetchStops = async () => {
       setIsLoadingStops(true)
@@ -60,7 +65,7 @@ export default function AdminReviewMap({ route, onActionComplete, readOnly = fal
     }
 
     fetchStops()
-  }, [route])
+  }, [route, isLiveEdit])
 
   // Fit bounds when path loads
   useEffect(() => {
@@ -74,11 +79,12 @@ export default function AdminReviewMap({ route, onActionComplete, readOnly = fal
   const handleUpdateStatus = async (newStatus) => {
     setIsUpdating(true)
     try {
+      const updatedPath = JSON.stringify(editablePath)
       const { error } = await supabase
         .from('routes')
-        .update({ 
+        .update({
           status: newStatus,
-          path_coordinates: JSON.stringify(editablePath) 
+          path_coordinates: updatedPath
         })
         .eq('id', route.id)
 
@@ -92,6 +98,28 @@ export default function AdminReviewMap({ route, onActionComplete, readOnly = fal
     }
   }
 
+  // Save path changes for live routes (no status change)
+  const handleSaveLiveChanges = async () => {
+    setIsUpdating(true)
+    try {
+      const updatedPath = JSON.stringify(editablePath)
+      const { error } = await supabase
+        .from('routes')
+        .update({
+          path_coordinates: updatedPath
+        })
+        .eq('id', route.id)
+
+      if (error) throw error
+      onActionComplete(route.id, 'updated', updatedPath)
+    } catch (err) {
+      console.error(err)
+      alert('Failed to save changes: ' + err.message)
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
   const handleDragNode = (idx, latLng) => {
     if (!latLng) return
     setEditablePath(prev => {
@@ -99,6 +127,15 @@ export default function AdminReviewMap({ route, onActionComplete, readOnly = fal
       newPath[idx] = [latLng.lat(), latLng.lng()]
       return newPath
     })
+  }
+
+  // Delete a checkpoint from the path
+  const handleDeleteNode = (idx) => {
+    if (editablePath.length <= 2) {
+      alert('Route must have at least 2 points')
+      return
+    }
+    setEditablePath(prev => prev.filter((_, i) => i !== idx))
   }
 
   const googlePath = useMemo(() => editablePath.map(c => ({ lat: c[0], lng: c[1] })), [editablePath])
@@ -139,11 +176,13 @@ export default function AdminReviewMap({ route, onActionComplete, readOnly = fal
               {editablePath.map((coord, idx) => {
                 if (isEditMode) {
                   return (
-                    <Marker 
-                      key={`path-edit-${idx}`} 
+                    <Marker
+                      key={`path-edit-${idx}`}
                       position={{ lat: coord[0], lng: coord[1] }}
                       draggable={true}
                       onDragEnd={(e) => handleDragNode(idx, e.latLng)}
+                      onRightClick={() => handleDeleteNode(idx)}
+                      title="Drag to move, right-click to delete"
                     />
                   )
                 }
@@ -167,32 +206,37 @@ export default function AdminReviewMap({ route, onActionComplete, readOnly = fal
         </GoogleMap>
 
         {/* Floating Route Info Header w/ Actions */}
-        <div className="absolute top-4 left-4 z-[1000] bg-slate-900/90 backdrop-blur border border-slate-700 p-5 rounded-2xl shadow-2xl max-w-sm w-full">
-          
+        <Card className="absolute top-4 left-4 z-[1000] bg-slate-900/90 backdrop-blur border-slate-700 p-5 rounded-2xl shadow-2xl max-w-sm w-full">
+
           <div className="flex justify-between items-start mb-1">
             <h2 className="text-xl font-bold text-white leading-tight">{route.name}</h2>
-            {!readOnly && (
-              <button 
+            {(isLiveEdit || !readOnly) && (
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setIsEditMode(!isEditMode)}
-                className={`px-3 py-1 rounded-md text-[10px] uppercase font-bold tracking-wider transition-all border ${isEditMode ? 'bg-amber-500/20 text-amber-500 border-amber-500/50 hover:bg-amber-500/30' : 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700'}`}
+                className={`px-3 py-1 text-[10px] uppercase font-bold tracking-wider ${isEditMode ? 'bg-amber-500/20 text-amber-500 border-amber-500/50 hover:bg-amber-500/30' : 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700'}`}
               >
-                {isEditMode ? 'Lock Path' : 'Edit Path'}
-              </button>
+                {isEditMode ? <><Lock className="w-3 h-3 mr-1" /> Lock Path</> : <><Route className="w-3 h-3 mr-1" /> Edit Path</>}
+              </Button>
             )}
           </div>
 
           <div className="flex items-center gap-2 mb-4">
             <div className="w-3 h-3 rounded-full" style={{ backgroundColor: route.color }}></div>
             <span className="text-xs font-semibold text-slate-300">{route.vehicle_type}</span>
+            {isLiveEdit && (
+              <Badge variant="success" className="ml-2 text-[9px]">Live Route</Badge>
+            )}
           </div>
 
           {isEditMode && (
-            <div className="mb-4 bg-amber-500/10 border border-amber-500/20 px-3 py-2 rounded-lg flex items-start gap-2">
-              <span className="text-amber-500 text-lg leading-none mt-0.5">✋</span>
-              <p className="text-[10px] text-amber-400 font-medium leading-tight">
-                **Edit Mode Active:** Drag the red markers on the map to realign this route perfectly to the major roads before saving.
-              </p>
-            </div>
+            <Alert variant="warning" className="mb-4">
+              <Hand className="h-4 w-4" />
+              <AlertDescription className="text-[10px]">
+                Edit Mode Active: Drag markers to move, right-click to delete a checkpoint.
+              </AlertDescription>
+            </Alert>
           )}
 
           <div className="flex items-center gap-6 text-xs mb-6 border-b border-slate-800 pb-4">
@@ -206,39 +250,64 @@ export default function AdminReviewMap({ route, onActionComplete, readOnly = fal
             </div>
           </div>
 
-          {!readOnly && (
+          {/* Pending route actions: Approve/Reject */}
+          {!readOnly && !isLiveEdit && (
             <div className="flex gap-3">
-              <button 
+              <Button
+                variant="destructive"
                 onClick={() => handleUpdateStatus('rejected')}
                 disabled={isUpdating}
-                className="flex-1 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 text-sm font-bold rounded-xl transition-all disabled:opacity-50"
+                className="flex-1 py-2"
               >
+                <XCircle className="w-4 h-4 mr-1" />
                 Reject
-              </button>
-              <button 
+              </Button>
+              <Button
+                variant="success"
                 onClick={() => handleUpdateStatus('approved')}
                 disabled={isUpdating}
-                className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-xl shadow-lg shadow-emerald-600/20 transition-all flex justify-center items-center disabled:opacity-50"
+                className="flex-1 py-2"
               >
+                <CheckCircle2 className="w-4 h-4 mr-1" />
                 {isUpdating ? 'Saving...' : 'Approve & Save'}
-              </button>
+              </Button>
             </div>
           )}
-        </div>
+
+          {/* Live route edit: Save Changes */}
+          {isLiveEdit && (
+            <Button
+              variant="success"
+              onClick={handleSaveLiveChanges}
+              disabled={isUpdating}
+              className="w-full py-2"
+            >
+              <Save className="w-4 h-4 mr-1" />
+              {isUpdating ? 'Saving...' : 'Save Changes'}
+            </Button>
+          )}
+        </Card>
       </div>
 
       {/* Stops Timeline Gallery */}
       <div className="h-48 bg-slate-950 border-t border-slate-800 p-4 shrink-0 overflow-y-auto custom-scrollbar relative z-[1000]">
-        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Route Timeline</h3>
-        
+        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+          <MapPin className="w-3 h-3" />
+          Route Timeline
+        </h3>
+
         {isLoadingStops ? (
           <div className="text-center text-sm text-slate-500 py-4 font-medium animate-pulse">Loading stops from database...</div>
         ) : stops.length === 0 ? (
-          <div className="text-center text-sm text-amber-500/70 py-4 font-medium">Warning: No stops were provided for this route.</div>
+          <Alert variant="warning" className="max-w-md mx-auto">
+            <AlertDescription>
+              Warning: No stops were provided for this route.
+            </AlertDescription>
+          </Alert>
         ) : (
           <div className="flex gap-4 min-w-max pb-2">
             {stops.map((stop, idx) => (
-              <div key={stop.id} className="bg-slate-900 border border-slate-800 p-3 rounded-xl w-48 shrink-0 flex items-center gap-3 relative z-[1010]">
+              <Card key={stop.id} className="bg-slate-900 border-slate-800 p-3 rounded-xl w-48 shrink-0 flex items-center gap-3 relative z-[1010]">
                 <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-lg shrink-0" style={{ backgroundColor: route.color }}>
                   {idx + 1}
                 </div>
@@ -246,7 +315,7 @@ export default function AdminReviewMap({ route, onActionComplete, readOnly = fal
                   <p className="text-sm font-bold text-white truncate leading-tight mb-0.5" title={stop.name}>{stop.name}</p>
                   <p className="text-[10px] text-slate-400 font-medium">Fare: <span className="text-emerald-400">Rs {stop.fare_from_previous}</span></p>
                 </div>
-              </div>
+              </Card>
             ))}
           </div>
         )}

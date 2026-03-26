@@ -1,6 +1,13 @@
 import { useState, useMemo } from 'react'
 import { GoogleMap, Polyline, OverlayView } from '@react-google-maps/api'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { Button } from './ui/button'
+import { Input } from './ui/input'
+import { Label } from './ui/label'
+import { Card, CardContent } from './ui/card'
+import { Alert, AlertDescription } from './ui/alert'
+import { CheckCircle2, ArrowLeft, Undo2, Trash2, Plus, Loader2, MapPin } from 'lucide-react'
 
 const KATHMANDU_CENTER = { lat: 27.7172, lng: 85.3240 }
 
@@ -23,6 +30,7 @@ function CustomHTMLMarker({ lat, lng, children }) {
 }
 
 export default function ContributionMap({ routeData, onCancel, prefillData }) {
+  const navigate = useNavigate()
   const [draftCoordinates, setDraftCoordinates] = useState(prefillData?.coords || [])
   const [stops, setStops] = useState(prefillData?.stops || [])
   
@@ -35,6 +43,9 @@ export default function ContributionMap({ routeData, onCancel, prefillData }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const [submitSuccess, setSubmitSuccess] = useState(false)
+
+  // Memoized values - MUST be before any conditional returns
+  const googlePath = useMemo(() => draftCoordinates.map(c => ({ lat: c[0], lng: c[1] })), [draftCoordinates])
 
   const handleMapClick = (e) => {
     // Only allow drawing if not currently adding a stop
@@ -82,6 +93,8 @@ export default function ContributionMap({ routeData, onCancel, prefillData }) {
     setIsSubmitting(true)
     setSubmitError('')
 
+    console.log('Submitting route...', { draftCoordinates, stops, routeData })
+
     try {
       // 1. Insert Route
       const { data: routeResult, error: routeError } = await supabase
@@ -91,13 +104,22 @@ export default function ContributionMap({ routeData, onCancel, prefillData }) {
           vehicle_type: routeData.vehicleType,
           color: routeData.color,
           submitter_name: routeData.submitterName,
-          path_coordinates: draftCoordinates, // Automatically JSON serialized
+          path_coordinates: draftCoordinates,
           status: 'pending'
         })
         .select()
         .single()
 
-      if (routeError) throw new Error("Failed to save route: " + routeError.message)
+      console.log('Route insert result:', { routeResult, routeError })
+
+      if (routeError) {
+        console.error('Route error details:', routeError)
+        throw new Error("Failed to save route: " + (routeError.message || routeError.code || 'Unknown error'))
+      }
+
+      if (!routeResult) {
+        throw new Error("No route data returned from database")
+      }
 
       const newRouteId = routeResult.id
 
@@ -111,23 +133,28 @@ export default function ContributionMap({ routeData, onCancel, prefillData }) {
         fare_from_previous: stop.fare
       }))
 
+      console.log('Inserting stops...', stopsToInsert)
+
       // 3. Insert Stops
       const { error: stopsError } = await supabase
         .from('stops')
         .insert(stopsToInsert)
 
-      if (stopsError) throw new Error("Failed to save stops: " + stopsError.message)
+      console.log('Stops insert result:', { stopsError })
+
+      if (stopsError) {
+        console.error('Stops error details:', stopsError)
+        throw new Error("Failed to save stops: " + (stopsError.message || stopsError.code || 'Unknown error'))
+      }
 
       // Success
+      console.log('Route submitted successfully!')
+      setIsSubmitting(false)
       setSubmitSuccess(true)
-      setTimeout(() => {
-        onCancel() // Go back to landing page
-      }, 3000)
 
     } catch (err) {
-      console.error(err)
-      setSubmitError(err.message)
-    } finally {
+      console.error('Submission error:', err)
+      setSubmitError(err.message || 'An unknown error occurred. Check browser console for details.')
       setIsSubmitting(false)
     }
   }
@@ -135,19 +162,24 @@ export default function ContributionMap({ routeData, onCancel, prefillData }) {
   if (submitSuccess) {
     return (
       <div className="h-full w-full flex items-center justify-center bg-slate-950 p-6">
-        <div className="bg-slate-900 border border-emerald-500/30 p-8 rounded-2xl shadow-xl max-w-sm w-full text-center">
-          <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-          </div>
-          <h2 className="text-2xl font-bold text-white mb-2">Route Submitted!</h2>
-          <p className="text-slate-400 text-sm mb-6">Your route has been sent to the admins for review. It will appear on the public map once approved.</p>
-          <p className="text-xs text-slate-500">Redirecting...</p>
-        </div>
+        <Card className="max-w-sm w-full text-center border-emerald-500/30">
+          <CardContent className="p-8">
+            <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle2 className="w-8 h-8 text-emerald-400" />
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-2">Route Submitted</h2>
+            <p className="text-slate-400 text-sm mb-6">Your route has been sent to the admins for review. It will appear on the public map once approved.</p>
+            <Button
+              onClick={() => navigate('/admin')}
+              className="w-full"
+            >
+              Go to Admin Panel
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     )
   }
-
-  const googlePath = useMemo(() => draftCoordinates.map(c => ({ lat: c[0], lng: c[1] })), [draftCoordinates])
 
   return (
     <div className="absolute inset-0 flex flex-col md:flex-row bg-slate-950 overflow-hidden">

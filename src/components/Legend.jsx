@@ -1,3 +1,5 @@
+import { Card } from './ui/card'
+
 function Legend({ routes, visibleRouteIds }) {
   const visibleRoutes = routes.filter(r => visibleRouteIds.has(r.id))
 
@@ -5,7 +7,7 @@ function Legend({ routes, visibleRouteIds }) {
 
   return (
     <div className="absolute bottom-6 left-6 md:bottom-8 md:left-8 z-[1000]">
-      <div className="bg-slate-900/90 backdrop-blur-xl rounded-xl border border-slate-700/50 px-4 py-3 shadow-xl shadow-black/30">
+      <Card className="bg-slate-900/90 backdrop-blur-xl border-slate-700/50 px-4 py-3 shadow-xl shadow-black/30">
         <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-2">
           Legend
         </p>
@@ -26,7 +28,7 @@ function Legend({ routes, visibleRouteIds }) {
             </div>
           ))}
         </div>
-      </div>
+      </Card>
     </div>
   )
 }

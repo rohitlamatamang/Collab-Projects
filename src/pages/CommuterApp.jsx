@@ -1,4 +1,6 @@
 import { useState, useCallback, useEffect } from 'react'
+import { Map, AlertTriangle } from 'lucide-react'
+import { Alert, AlertDescription } from '../components/ui/alert'
 import RouteSidebar from '../components/RouteSidebar'
 import RouteMap from '../components/RouteMap'
 import RouteDetails from '../components/RouteDetails'
@@ -208,9 +210,7 @@ function App() {
           <div className="p-4 md:p-6 pb-4 shrink-0">
             <div className="flex items-center gap-4 hidden md:flex mb-6">
               <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-500 to-emerald-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                </svg>
+                <Map className="w-5 h-5 text-white" />
               </div>
               <div>
                 <h1 className="text-xl font-extrabold bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent transform scale-y-105">
@@ -235,9 +235,12 @@ function App() {
                   <span className="text-blue-400 lowercase italic"> {searchResult.matches.length} found</span>
                 </p>
                 {searchResult.matches.length === 0 && (
-                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 text-xs text-amber-500 font-medium mt-2">
-                    No direct routes found.
-                  </div>
+                  <Alert variant="warning" className="mt-2">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      No direct routes found.
+                    </AlertDescription>
+                  </Alert>
                 )}
               </div>
             )}
