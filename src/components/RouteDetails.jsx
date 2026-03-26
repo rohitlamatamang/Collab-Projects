@@ -1,46 +1,49 @@
 function RouteDetails({ route, onClose, navMatch }) {
   return (
-    <div className="border-t border-slate-800/50 bg-slate-900/60">
-      <div className="p-4">
+    <div className="border-t border-white/10 bg-gradient-to-t from-slate-900 via-slate-900/95 to-slate-900/80 backdrop-blur-3xl shrink-0 transition-all duration-300">
+      <div className="p-4 md:p-6 shadow-[0_-20px_30px_-15px_rgba(0,0,0,0.5)]">
         {/* Navigation Summary (if in search mode) */}
         {navMatch && (
-          <div className="mb-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3">
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider">Navigation Fare</span>
-              <span className="text-sm font-black text-white">Rs {navMatch.fare}</span>
+          <div className="mb-4 bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 border border-emerald-500/20 rounded-2xl p-4 shadow-inner shadow-emerald-500/10">
+            <div className="flex justify-between items-center mb-1.5">
+              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Navigation Fare</span>
+              <span className="text-xl font-black text-white drop-shadow-md">Rs {navMatch.fare}</span>
             </div>
-            <p className="text-[11px] text-slate-400 leading-tight">
-              Total fare from <span className="text-slate-200 font-bold">{navMatch.fromStop.name}</span> to <span className="text-slate-200 font-bold">{navMatch.toStop.name}</span>.
+            <p className="text-xs text-slate-300 leading-tight">
+              Total fare from <span className="text-white font-bold">{navMatch.fromStop.name}</span> to <span className="text-white font-bold">{navMatch.toStop.name}</span>.
             </p>
           </div>
         )}
 
         {/* Header */}
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center gap-2.5 text-xs">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center gap-3">
             <div
-              className="w-2.5 h-2.5 rounded-full"
+              className="w-3.5 h-3.5 rounded-full shrink-0"
               style={{
                 backgroundColor: route.color,
-                boxShadow: `0 0 10px ${route.color}50`
+                boxShadow: `0 0 16px ${route.color}80, inset 0 0 4px rgba(255,255,255,0.5)`
               }}
             />
-            <h3 className="font-bold text-white truncate max-w-[150px]">{route.name}</h3>
+            <h3 className="font-bold text-white text-base truncate max-w-[200px] md:max-w-[250px] leading-tight">{route.name}</h3>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-500 hover:text-white transition-colors p-1 rounded-lg hover:bg-slate-800/50"
+            className="text-slate-400 hover:text-white transition-all p-1.5 rounded-full hover:bg-white/10 active:scale-90 bg-slate-800/50"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
         {/* Stops timeline */}
         <div className="space-y-0">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-600 mb-2">Stops</p>
-          <div className="max-h-36 overflow-y-auto custom-scrollbar pr-1">
+          <div className="flex items-center gap-2 mb-3">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Route Stops</p>
+            <div className="h-px flex-1 bg-gradient-to-r from-slate-700 to-transparent" />
+          </div>
+          <div className="max-h-40 overflow-y-auto no-scrollbar md:custom-scrollbar pr-1 relative">
             {route.stops.map((stop, index) => {
               const isFirst = index === 0
               const isLast = index === route.stops.length - 1

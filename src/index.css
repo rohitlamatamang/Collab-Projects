@@ -1,13 +1,36 @@
 @import "tailwindcss";
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #020617; /* slate-950 */
+  color: #f8fafc; /* slate-50 */
+  -webkit-tap-highlight-color: transparent; /* Remove blue tap highlight on mobile */
+}
+
+/* Global focus states */
+*:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Remove scrollbar completely for sleek mobile UI but keep functionality */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* Leaflet map container must have explicit height */
 .leaflet-container {
   height: 100%;
   width: 100%;
-  border-radius: 0.75rem;
 }
 
-/* Custom scrollbar for sidebar */
+/* Custom scrollbar for desktop sidebars */
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;
 }
@@ -15,7 +38,7 @@
   background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #475569;
+  background: #334155;
   border-radius: 999px;
 }
 
@@ -24,16 +47,21 @@
   scroll-behavior: smooth;
 }
 
-/* Leaflet popup overrides for dark theme */
+/* Subtler Leaflet popup overrides for dark theme */
 .leaflet-popup-content-wrapper {
-  background: #1e293b !important;
-  color: #f1f5f9 !important;
-  border-radius: 0.5rem !important;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3) !important;
+  background: rgba(15, 23, 42, 0.95) !important; /* slate-900 with transparency */
+  backdrop-filter: blur(8px) !important;
+  color: #f8fafc !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
 }
 .leaflet-popup-tip {
-  background: #1e293b !important;
+  background: rgba(15, 23, 42, 0.95) !important;
 }
 .leaflet-popup-close-button {
   color: #94a3b8 !important;
+  font-size: 1.25rem !important;
+  top: 4px !important;
+  right: 4px !important;
 }

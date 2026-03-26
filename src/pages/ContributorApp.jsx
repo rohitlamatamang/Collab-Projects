@@ -83,45 +83,54 @@ function ContributorApp() {
   }
 
   return (
-    <div className="h-full w-full overflow-y-auto bg-slate-950 p-4 md:p-8 custom-scrollbar">
-      <div className="max-w-xl mx-auto mt-4 md:mt-10">
+    <div className="h-full w-full overflow-y-auto bg-gradient-to-br from-slate-900 via-slate-950 to-slate-950 p-4 md:p-8 no-scrollbar md:custom-scrollbar relative">
+      
+      {/* Premium Background Glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-lg h-96 bg-blue-500/10 blur-[120px] rounded-full pointer-events-none" />
+
+      <div className="max-w-lg mx-auto mt-2 md:mt-10 relative z-10">
         
         {/* Header */}
-        <div className="mb-8 text-center md:text-left">
-          <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
-            Contribute a Route
+        <div className="mb-8 text-center">
+          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-emerald-500 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg shadow-blue-500/20">
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+          </div>
+          <h1 className="text-3xl font-extrabold text-white mb-2 tracking-tight">
+            Map a New Route
           </h1>
-          <p className="text-sm text-slate-400">
-            Help map Kathmandu's unmatched public transport network. Record your route and submit it for review.
+          <p className="text-sm text-slate-400 max-w-sm mx-auto">
+            Help build Kathmandu's transit network. Trace your daily commute and submit it for the community.
           </p>
         </div>
 
         {/* Demo Buttons */}
-        <div className="mb-6 flex flex-col gap-3">
+        <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-3">
           <button 
             onClick={handleDemoFill}
-            className="w-full bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-500 font-bold py-3 px-6 rounded-xl transition-all flex items-center justify-center gap-2 group"
+            className="w-full bg-slate-800/50 hover:bg-slate-800 border border-white/5 text-slate-300 font-semibold py-3.5 px-4 rounded-2xl transition-all flex items-center justify-center gap-2 group shadow-sm active:scale-[0.98]"
           >
-            <span className="text-lg group-hover:scale-125 transition-transform">✨</span>
-            Fill Demo Form (then click Start Mapping)
+            <span className="text-lg group-hover:scale-110 transition-transform">✨</span>
+            <span className="text-sm">Autofill Demo</span>
           </button>
           <button 
             onClick={handleAutoDemo}
-            className="w-full bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-500 font-bold py-3 px-6 rounded-xl transition-all flex items-center justify-center gap-2 group"
+            className="w-full bg-gradient-to-r from-emerald-500/20 to-teal-500/20 hover:from-emerald-500/30 hover:to-teal-500/30 border border-emerald-500/20 text-emerald-400 font-semibold py-3.5 px-4 rounded-2xl transition-all flex items-center justify-center gap-2 group shadow-sm active:scale-[0.98]"
           >
-            <span className="text-lg group-hover:scale-125 transition-transform">🚀</span>
-            Auto Demo: Chandeshwari → Ratnapark
+            <span className="text-lg group-hover:scale-110 transition-transform">🚀</span>
+            <span className="text-sm">Instant Demo</span>
           </button>
         </div>
 
         {/* Start Submission Form */}
-        <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-2xl p-5 md:p-7 shadow-xl shadow-black/20">
+        <div className="bg-slate-900/60 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-6 md:p-8 shadow-2xl shadow-black/40">
           
           <div className="space-y-6">
             {/* Submitter Name */}
             <div>
-              <label htmlFor="submitter" className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                Your Name / Alias
+              <label htmlFor="submitter" className="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-1">
+                Your Alias
               </label>
               <input
                 type="text"
@@ -129,14 +138,14 @@ function ContributorApp() {
                 value={submitterName}
                 onChange={(e) => setSubmitterName(e.target.value)}
                 placeholder="e.g. Hari Bahadur"
-                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                className="w-full bg-slate-950/50 border border-white/5 rounded-2xl px-5 py-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 transition-all shadow-inner shadow-black/20"
               />
             </div>
 
             {/* Route Name */}
             <div>
-              <label htmlFor="routeName" className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                Route Description
+              <label htmlFor="routeName" className="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-1">
+                Route Path
               </label>
               <input
                 type="text"
@@ -144,69 +153,70 @@ function ContributorApp() {
                 value={routeName}
                 onChange={(e) => setRouteName(e.target.value)}
                 placeholder="e.g. Gongabu to Lagankhel"
-                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                className="w-full bg-slate-950/50 border border-white/5 rounded-2xl px-5 py-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 transition-all shadow-inner shadow-black/20"
               />
             </div>
 
-            {/* Vehicle Type */}
-            <div>
-              <label htmlFor="vehicle" className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                Vehicle Type
-              </label>
-              <div className="relative">
-                <select
-                  id="vehicle"
-                  value={vehicleType}
-                  onChange={(e) => setVehicleType(e.target.value)}
-                  className="w-full appearance-none bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all cursor-pointer"
-                >
-                  <option value="Bus">Bus (Mahanagar/Sajha etc)</option>
-                  <option value="Microbus">Microbus (Hiace)</option>
-                  <option value="Tempo">Safa Tempo</option>
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
+            <div className="grid grid-cols-2 gap-4">
+              {/* Vehicle Type */}
+              <div className="col-span-2 md:col-span-1">
+                <label htmlFor="vehicle" className="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-1">
+                  Vehicle
+                </label>
+                <div className="relative">
+                  <select
+                    id="vehicle"
+                    value={vehicleType}
+                    onChange={(e) => setVehicleType(e.target.value)}
+                    className="w-full appearance-none bg-slate-950/50 border border-white/5 rounded-2xl px-5 py-4 text-sm text-white focus:outline-none focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 transition-all cursor-pointer shadow-inner shadow-black/20"
+                  >
+                    <option value="Bus">City Bus</option>
+                    <option value="Microbus">Microbus</option>
+                    <option value="Tempo">Safa Tempo</option>
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              {/* Route Color Picker */}
+              <div className="col-span-2 md:col-span-1">
+                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3 px-1">
+                  Color
+                </label>
+                <div className="flex flex-wrap gap-2.5">
+                  {PRESET_COLORS.map(c => (
+                    <button
+                      key={c}
+                      onClick={() => setColor(c)}
+                      className={`w-9 h-9 rounded-full transition-all flex items-center justify-center shadow-lg ${color === c ? 'ring-[3px] ring-white scale-110 shadow-black/50' : 'hover:scale-110 opacity-60 hover:opacity-100 shadow-black/20'}`}
+                      style={{ backgroundColor: c }}
+                    >
+                      {color === c && (
+                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                      )}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
 
-            {/* Route Color Picker */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
-                Route Path Color
-              </label>
-              <div className="flex flex-wrap gap-3">
-                {PRESET_COLORS.map(c => (
-                  <button
-                    key={c}
-                    onClick={() => setColor(c)}
-                    className={`w-10 h-10 rounded-full transition-all flex items-center justify-center ${color === c ? 'ring-2 ring-offset-2 ring-offset-slate-900 ring-white scale-110' : 'hover:scale-110 opacity-70 hover:opacity-100'}`}
-                    style={{ backgroundColor: c }}
-                  >
-                    {color === c && (
-                      <svg className="w-5 h-5 text-white/90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             {/* Start Mapping Button */}
-            <div className="pt-4">
+            <div className="pt-6">
               <button 
                 onClick={handleStartMapping}
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-4 px-6 rounded-xl shadow-lg shadow-blue-500/25 transition-all transform hover:-translate-y-0.5"
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-sm font-bold uppercase tracking-wider py-4 px-6 rounded-2xl shadow-xl shadow-blue-500/25 transition-all transform active:scale-[0.98] flex items-center justify-center gap-2"
               >
-                Start Mapping
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>
+                Open Map Editor
               </button>
             </div>
 
           </div>
-
         </div>
-
       </div>
     </div>
   )

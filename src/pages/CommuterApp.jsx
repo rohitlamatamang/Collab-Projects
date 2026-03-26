@@ -174,55 +174,52 @@ function App() {
   }, [])
 
   return (
-    <div className="h-screen w-screen bg-slate-950 text-slate-100 flex overflow-hidden">
-      {/* Mobile menu button */}
-      <button
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="md:hidden fixed top-4 left-4 z-50 bg-slate-800/90 backdrop-blur-sm p-2.5 rounded-xl border border-slate-700/50 shadow-lg shadow-black/20 hover:bg-slate-700 transition-colors"
-      >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          {sidebarOpen ? (
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          ) : (
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          )}
-        </svg>
-      </button>
-
-      {sidebarOpen && (
-        <div
-          className="md:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-30"
-          onClick={() => setSidebarOpen(false)}
+    <div className="h-full w-full bg-slate-950 text-slate-100 flex relative overflow-hidden">
+      
+      {/* Map Area - Now truly full screen underneath everything */}
+      <main className="absolute inset-0 z-0">
+        <RouteMap
+          routes={allRoutes}
+          selectedRouteId={selectedRouteId}
+          visibleRouteIds={visibleRouteIds}
+          navMatch={currentNavMatch}
         />
-      )}
+      </main>
 
-      {/* Sidebar */}
+      {/* Sidebar / Floating Bottom Sheet */}
       <aside className={`
-        fixed md:static z-40 h-full
-        w-80 shrink-0
-        bg-slate-900/80 backdrop-blur-xl border-r border-slate-800/50
-        transform transition-transform duration-300 ease-out
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        fixed md:static z-40
+        bottom-4 left-2 right-2 rounded-3xl border overflow-hidden
+        md:bottom-auto md:left-auto md:right-auto md:h-full md:w-[400px] md:border-y-0 md:border-l-0 md:border-r md:rounded-none
+        bg-slate-900/85 backdrop-blur-2xl border-white/10 shadow-[0_-10px_40px_-5px_rgba(0,0,0,0.5)] md:shadow-2xl
+        flex flex-col transition-all duration-300 ease-in-out
+        ${sidebarOpen ? 'h-[75vh] bottom-4' : 'h-[38vh] bottom-4'} md:h-full
       `}>
-        <div className="h-full flex flex-col">
+        {/* Mobile Drag Handle / Expand Toggle */}
+        <div 
+          className="md:hidden w-full flex items-center justify-center pt-3 pb-1 cursor-pointer active:bg-white/5"
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+        >
+          <div className="w-12 h-1.5 bg-white/20 rounded-full" />
+        </div>
+
+        <div className="flex-1 flex flex-col h-full overflow-hidden">
           {/* Header */}
-          <div className="p-5 border-b border-slate-800/50">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-emerald-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
+          <div className="p-4 md:p-6 pb-4 shrink-0">
+            <div className="flex items-center gap-4 hidden md:flex mb-6">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-500 to-emerald-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
                 <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                 </svg>
               </div>
               <div>
-                <h1 className="text-lg font-bold bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
+                <h1 className="text-xl font-extrabold bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent transform scale-y-105">
                   TempoMetro
                 </h1>
-                <p className="text-xs text-slate-500">Kathmandu Transit Routes</p>
+                <p className="text-[11px] font-medium text-slate-400 tracking-wide">KATHMANDU TRANSIT NETWORK</p>
               </div>
             </div>
-          </div>
 
-          <div className="px-5 pt-6 pb-2">
             <RouteSearch 
               allRoutes={allRoutes} 
               onSearch={handleSearch} 
@@ -230,15 +227,15 @@ function App() {
             />
           </div>
 
-          <div className="flex-1 overflow-y-auto custom-scrollbar p-3 pt-0">
+          <div className="flex-1 overflow-y-auto no-scrollbar md:custom-scrollbar p-3 pt-0 relative">
             {searchResult && (
-              <div className="px-2 mb-4">
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 flex justify-between items-center">
+              <div className="px-3 mb-4 sticky top-0 bg-slate-900/90 backdrop-blur-md z-10 py-2 border-b border-white/5">
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 flex justify-between items-center">
                   Search Results
                   <span className="text-blue-400 lowercase italic"> {searchResult.matches.length} found</span>
                 </p>
                 {searchResult.matches.length === 0 && (
-                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 text-[10px] text-amber-500 font-medium">
+                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 text-xs text-amber-500 font-medium mt-2">
                     No direct routes found.
                   </div>
                 )}
@@ -251,7 +248,8 @@ function App() {
               visibleRouteIds={visibleRouteIds}
               onSelectRoute={(id) => {
                 handleSelectRoute(id)
-                setSidebarOpen(false)
+                // Optional: expand sheet on mobile if they click a route to see details
+                if (!sidebarOpen) setSidebarOpen(true)
               }}
               onToggleRoute={handleToggleRoute}
               searchResult={searchResult}
@@ -267,16 +265,6 @@ function App() {
           )}
         </div>
       </aside>
-
-      {/* Map Area */}
-      <main className="flex-1 relative">
-        <RouteMap
-          routes={allRoutes}
-          selectedRouteId={selectedRouteId}
-          visibleRouteIds={visibleRouteIds}
-          navMatch={currentNavMatch}
-        />
-      </main>
     </div>
   )
 }
