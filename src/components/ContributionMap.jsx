@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { GoogleMap, Polyline, OverlayView } from '@react-google-maps/api'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { DARK_MAP_STYLE } from '../lib/mapStyles'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Label } from './ui/label'
@@ -10,8 +11,6 @@ import { Alert, AlertDescription } from './ui/alert'
 import { CheckCircle2, ArrowLeft, Undo2, Trash2, Plus, Loader2, MapPin } from 'lucide-react'
 
 const KATHMANDU_CENTER = { lat: 27.7172, lng: 85.3240 }
-
-const CARTO_DARK_MATTER_STYLE = []
 
 function CustomHTMLMarker({ lat, lng, children }) {
   const position = useMemo(() => ({ lat, lng }), [lat, lng])
@@ -192,7 +191,7 @@ export default function ContributionMap({ routeData, onCancel, prefillData }) {
           zoom={13}
           onClick={handleMapClick}
           options={{
-            styles: CARTO_DARK_MATTER_STYLE,
+            styles: DARK_MAP_STYLE,
             disableDefaultUI: true,
             zoomControl: true,
             draggableCursor: 'crosshair'

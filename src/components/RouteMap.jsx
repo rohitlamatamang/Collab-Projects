@@ -2,12 +2,10 @@ import { useCallback, useState } from 'react'
 import { GoogleMap } from '@react-google-maps/api'
 import RouteLayer from './RouteLayer'
 import Legend from './Legend'
+import { DARK_MAP_STYLE } from '../lib/mapStyles'
 
 const KATHMANDU_CENTER = { lat: 27.7000, lng: 85.3340 }
 const DEFAULT_ZOOM = 13
-
-// Default Light Mode style for Google Maps
-const CARTO_DARK_MATTER_STYLE = []
 
 function RouteMap({ routes, selectedRouteId, visibleRouteIds, navMatch }) {
   const visibleRoutes = routes.filter(r => visibleRouteIds.has(r.id))
@@ -29,9 +27,9 @@ function RouteMap({ routes, selectedRouteId, visibleRouteIds, navMatch }) {
           center={KATHMANDU_CENTER}
           zoom={DEFAULT_ZOOM}
           options={{
-            styles: CARTO_DARK_MATTER_STYLE,
-            disableDefaultUI: true, // remove clutter like streetview, Map/Satellite toggle
-            zoomControl: true, // add generic zoom control back in
+            styles: DARK_MAP_STYLE,
+            disableDefaultUI: true,
+            zoomControl: true,
           }}
           onLoad={onLoad}
           onUnmount={onUnmount}

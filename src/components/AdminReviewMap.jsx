@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { GoogleMap, Polyline, Marker, OverlayView } from '@react-google-maps/api'
 import { supabase } from '../lib/supabase'
+import { DARK_MAP_STYLE } from '../lib/mapStyles'
 import { Hand, Lock, CheckCircle2, XCircle, MapPin, Route, Save, Trash2 } from 'lucide-react'
 import { Button } from './ui/button'
 import { Card } from './ui/card'
@@ -8,8 +9,6 @@ import { Alert, AlertDescription } from './ui/alert'
 import { Badge } from './ui/badge'
 
 const KATHMANDU_CENTER = { lat: 27.7172, lng: 85.3240 }
-
-const CARTO_DARK_MATTER_STYLE = []
 
 function CustomHTMLMarker({ lat, lng, children }) {
   const position = useMemo(() => ({ lat, lng }), [lat, lng])
@@ -153,7 +152,7 @@ export default function AdminReviewMap({ route, onActionComplete, readOnly = fal
           zoom={13}
           onLoad={onLoad}
           options={{
-            styles: CARTO_DARK_MATTER_STYLE,
+            styles: DARK_MAP_STYLE,
             disableDefaultUI: true,
             zoomControl: true,
           }}
